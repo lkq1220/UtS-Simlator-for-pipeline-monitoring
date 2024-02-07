@@ -6,7 +6,7 @@ close all;
 tic
 Payload = 23;           % Message payload
 
-GW_num=400;
+GW_num=1000;
 [Grid, Idx, GW_center,D_center,Center_found] = latlon2UTM('bus.csv',GW_num); 
 [Min_distance, Satellite_subpoint]=min(D_center);
 
