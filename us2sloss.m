@@ -11,8 +11,7 @@ Dense_LOS_prob_all_angles=sort(interp1(Elevation_Angles,Dense_LOS_prob ,Elevatio
 %% path loss calculations featuring LOS and NLOS probabilities
 i=pointer;
 d_BS = 25;
-% LOS=0;
-% NLOS=0;
+
 parfor mCarlo=1:MonteCarlo
     Prob=rand;
     if(Prob<=Dense_LOS_prob_all_angles(i))

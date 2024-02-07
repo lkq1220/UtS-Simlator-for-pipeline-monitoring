@@ -6,9 +6,7 @@ Base =zeros(1,length(Elevation_Simulation));
     
 Location_X_Y=Grid;
     
-for WhichAngle=1:length(Elevation_Simulation)
-
-    % Calculating the equation (5) of the paper    
+for WhichAngle=1:length(Elevation_Simulation)  
     Eq_pt_1 = cosd(Elevation_Simulation(WhichAngle)).*cosd(Elevation_Simulation(WhichAngle));  
     Eq_pt_2 = ((Orbit_Height + Earth_Radius)./Earth_Radius)^2;
     
@@ -21,9 +19,6 @@ for WhichAngle=1:length(Elevation_Simulation)
         end
     
 %% simulation points (distance): Satellite mobility
-% Here we are increasing the distance from Wind turbine to the Satellite as
-% shown on X-axis of Figure 8-10
-    
     Satellite_Link_Farms(WhichAngle,:,:)=[(Location_X_Y(:,1)+ Base(WhichAngle)), Location_X_Y(: ,2)];
     Distance_from_sub_point(WhichAngle) = sqrt((Location_X_Y(Subpoint,1)-Satellite_Link_Farms(WhichAngle,Subpoint,1))^2 + (Location_X_Y(Subpoint,2) - Satellite_Link_Farms(WhichAngle,Subpoint,2))^2);
     

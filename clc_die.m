@@ -1,9 +1,6 @@
-%function [realSoilDielectric, imagSoilDielectric] = clc_die(sand, clay, ro_b,ro_s, vwc_input, frequency)
 function [realSoilDielectric, imagSoilDielectric] = clc_die(clay_input, vwc_input, frequency)
-      EPSILON_0 =  8.854187817 .* 10.0.^-12;
-      PI = 3.14159265358979323846;
-
- %计算介电常数，通过MBSDM模型
+    EPSILON_0 =  8.854187817 .* 10.0.^-12;
+    PI = 3.14159265358979323846;
     clay = clay_input;
     vwc = vwc_input;
     

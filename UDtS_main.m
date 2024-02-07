@@ -16,15 +16,13 @@ E = 90:-1:10;               %Elevation Angles
 R = 6378e3;                % Radius of earth
 H = 550e3;                 %Orbital height 
 [Satellite_Link_Farms,Ground_distance,Difference_from_GW_Slant_Range] = Simulations_Distance_Points(R,H,Grid,Satellite_subpoint);
-[Distance] = Satellite_Geometry(sort(Ground_distance),H);
-select_index = [1 9 26 35 41 50 56 61 65 68 70 72 74:1:81];
-% select_index=1:1:81;
+Distance = height2range(H,1,E);
+select_index=1:1:81;
 Distance= Distance(select_index);
-% E_angles = [10 20 30 40 50 60 70 80 90];
 
 R_Time = 900;              % Report period
 Period = 60.*60.*1000;     % 1 hour in milliseconds
-MonteCarlo = 1e3;    % No. of Iterations
+MonteCarlo = 1e2;    % No. of Iterations
 
 %% Gains and Pt are converted into linear form
 
@@ -33,40 +31,15 @@ Freq_Band = 470e6;         % 470 MHz (frequency band China)
 
 Gr=(10.^((22.6)/10));      %22.6: LoRa Gateway
 Gt=(10.^((2.15)/10));      %2.15 dBi: End-device
-% eta = 2;
-% std=0.1;
 
 %paramters for soil characteristics 
 Clay_input=3.7;
-VWC_input=0.05;%0.132
+VWC_input=0.132;%0.132
 Depth=0.6;
-% [RealSoilDielectric, ImagSoilDielectric] = clc_die(Clay_input, VWC_input, Freq_Band);
 
-%% Simulator Comparsion U-DtS and DtS
-% P_snr=zeros(length(Distance),1);
-% P_snr_nocity=zeros(length(Distance),1);
-% PL_nocity=zeros(length(Distance),1);
-% PL_total=zeros(length(Distance),1);
 D_SNR = 10.^([-17.5]./10);
-% ToA = [41.216 288.768 991.232];
-% ToA = [41.216 144.384 577.536]; %Time on Air for 10 bytes in milliseconds
 ToA=[823.296];
 Channels=48;
-% [RealSoilDielectric, ImagSoilDielectric] = clc_die(Clay_input, VWC_input, Freq_Band);
-% [PSNR_UDtS(:,1),PSNR_UDtSFSPL(:,1)] = Probability_SNR (Pt,Gt,Gr,D_SNR,Distance,MonteCarlo,eta,std,RealSoilDielectric,ImagSoilDielectric,Depth);
-% 
-% PSNR_DtS = gwtosatellite(MonteCarlo,Distance);
-% 
-% figure
-% h(1)=plot(Distance/1000,sort(PSNR_DtS,'descend'),'r-','linewidth',2);
-% hold on 
-% h(2)=plot(Distance/1000,PSNR_UDtS,'b-','linewidth',2);
-% grid on
-% set(gca,'fontsize',12);
-% ylabel('Dense City Probability', 'Interpreter', 'Latex','fontsize',12);
-% xlabel('Distance (km)', 'Interpreter', 'Latex','fontsize',12);
-% axis([Distance(1)/1000 Distance(end)/1000 0 1]);
-% legend('$P_{SNR}$ (DtS)','$P_{SNR}$ (U-DtS Depth=0.5m)','Interpreter', 'Latex','fontsize',12);
 
 Elevation_Angles = 10:10:90;
 Elevation_Angles_steps = 10:1:90;
@@ -80,21 +53,6 @@ k = sort(interp1(Elevation_Angles,K_factor,Elevation_Angles_steps),'descend');
 for count=1:1:length(D_SNR)
     [PSNR_UDtS(count,:)] = Probability_SNR(Pt,Gt,Gr,D_SNR(count),Distance,MonteCarlo,RealSoilDielectric,ImagSoilDielectric,Depth,k,select_index);
 end
-
-% figure
-% plot(Distance/1000,PSNR_UDtS(1,:),'r-','linewidth',2);
-% hold on 
-% plot(Distance/1000,PSNR_UDtS(2,:),'b-','linewidth',2);
-% hold on 
-% plot(Distance/1000,PSNR_UDtS(3,:),'k-','linewidth',2);
-% hold on 
-% grid on
-
-% ylabel('U-DtS Probability', 'Interpreter', 'Latex','fontsize',14);
-% xlabel('Distance from user to satellite (km)','Interpreter','Latex','FontSize', 14);
-% axis([Distance(1)/1000 Distance(end)/1000 0 1]);
-% legend('$P_{SNR-DtS}$ (SF7)','$P_{SNR-DtS}$ (SF9)','$P_{SNR-DtS}$ (SF11)','Interpreter', 'Latex','fontsize',14);
-% set(gca,'fontsize',14);
 
 %Calculate PSIR 
 
@@ -169,35 +127,21 @@ for count=1:1:length(D_SNR)
                  E_AngPro = round(asind(E_dpro));
                  kC = interp1(Elevation_Angles,K_factor,E_AngPro);
               %% Log Distance Path loss
-%               Lo = eta * 10*log10(4*pi*do*(1/wavelength));
-%                 clear L_int
-%                 clear L_Lin_int
                 clear pr_h_g_I_tmp
                 clear pr_h_g_I
-%                 L_int=zeros(simultaneous);
-%                 L_Lin_int=zeros(1,simultaneous);
                 
-%               L_int  = Lo + 10*eta*log10( Location_Nodes_Int/do) + std*randn(1,1);
                 Lu  = City_U2Aloss(RealSoilDielectric, ImagSoilDielectric,Depth,Freq_Band);
                 h1=ones(1,MonteCarlo);
                 
                 for track=1:1:length(Location_Nodes_Int) 
-%                     L_int(track,:) =  us2sloss(Pt,Gt,Gr, MonteCarlo,Distance,pointer,Loss_u,k);
-%                     L_Lin_int(track,:)=10.^((L_int(track,:))./10);
                     pr_h_g_I_tmp(track)=mean(us2sloss(Pt,Gt,Gr, MonteCarlo,dPropogation(1,track),91-E_AngPro(track),Lu,kC(track)));
                 end
                 
                 %% total interferance = sum of all the interfering signals 
-                 pr_h_g_I = sum(pr_h_g_I_tmp);
-
-                %% Rician fading for desired signals                
+                 pr_h_g_I = sum(pr_h_g_I_tmp);            
 
                 %% Received power of desired signal
-%                 L_des  = Lo + 10*eta*log10(Distance(c)/do) + std*randn(1,1);
-%                 L_des =  us2sloss(MonteCarlo,Distance(c),82-select_index(c),Lu);
-%                 L_des =  U2Aloss(RealSoilDielectric, ImagSoilDielectric,Depth,Distance,eta,Freq_Band)+std*randn(1,1);
-%                 L_Lin_des=10.^((L_des)./10);
-                
+
                 pr_h_g_D = mean(us2sloss(Pt,Gt,Gr, MonteCarlo,Distance(c),select_index(c),Lu,k(select_index(c))));
 
                 %% Data Collisions and Spreading Factor Orthogonality
@@ -221,33 +165,5 @@ for count=1:1:length(D_SNR)
 end
 
 PSF11_UDtS  = PSNR_UDtS(1,:).*PSIR_UDtS(1,:);
-% PSF10_UDtS = PSNR_UDtS(2,:).*PSIR_UDtS(2,:);
-% PSF12_UDtS = PSNR_UDtS(3,:).*PSIR_UDtS(3,:);
-
-% figure
-% plot(Distance/1000,PSIR_UDtS(1,:),'-r','LineWidth',2);
-% hold on
-% plot(Distance/1000,PSIR_UDtS(2,:),'-b','LineWidth',2);
-% hold on
-% plot(Distance/1000,PSIR_UDtS(3,:),'-k','LineWidth',2);
-% grid on
-% ylabel('U-DtS Probability','Interpreter','Latex','FontSize', 14);
-% xlabel('Distance from user to satellite (km)','Interpreter','Latex','FontSize', 14);
-% axis([Distance(1)/1000 Distance(end)/1000 0 1]);
-% legend('$P_{SIR-DtS}$ (SF7)','$P_{SIR-DtS}$ (SF9)','$P_{SIR-DtS}$ (SF11)','Interpreter', 'Latex','fontsize',14,'Location','best');
-% set(gca,'fontsize',14);
-% 
-% figure
-% plot(Distance/1000,PSF7_UDtS,'-r','LineWidth',2);
-% hold on
-% plot(Distance/1000,PSF10_UDtS,'-b','LineWidth',2);
-% hold on
-% plot(Distance/1000,PSF12_UDtS,'-k','LineWidth',2);
-% grid on
-% ylabel('U-DtS Probability','Interpreter','Latex','FontSize', 14);
-% xlabel('Distance from user to satellite (km)','Interpreter','Latex','FontSize', 14);
-% axis([Distance(1)/1000 Distance(end)/1000 0 1]);
-% legend('$P_{S-DtS}$ (SF7)','$P_{S-DtS}$ (SF9)','$P_{S-DtS}$ (SF11)','Interpreter', 'Latex','fontsize',14,'Location','best');
-% set(gca,'fontsize',14);
 
 toc
